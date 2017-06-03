@@ -3,33 +3,17 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "OpenDoor.generated.h"
+#include "Grabber.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDoorEvent);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class BUILDINGESCAPE_API UOpenDoor : public UActorComponent
+class BUILDINGESCAPE_API UGrabber : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UOpenDoor();
-	//void OpenDoor();
-	//void CloseDoor();
-
-	UPROPERTY(BlueprintAssignable)
-		FDoorEvent OnOpen;
-	UPROPERTY(BlueprintAssignable)
-		FDoorEvent OnClose;
-
-private:
-	UPROPERTY(EditAnywhere)
-		ATriggerVolume* PressurePlate;
-
-	float TriggerMass = 30.f;
-	AActor* Owner;
-	float GetTotalMassOfActionsOnPlate();
+	UGrabber();
 
 protected:
 	// Called when the game starts
@@ -38,4 +22,20 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+private:
+	float Reach = 200.f;
+	UPhysicsHandleComponent* PhysicsHandle = nullptr;
+	UInputComponent* InputComponent = nullptr;
+
+	void FindPhysicsHandleComponent();
+	void SetupInputComponent();
+
+	const FHitResult GetFirstPhysicsBodyInReach();
+	FVector GetReachLineStart();
+	FVector GetReachLineEnd();
+	// Ray-cast and grab what's in reach
+	void Grab();
+	void Release();
+	
 };

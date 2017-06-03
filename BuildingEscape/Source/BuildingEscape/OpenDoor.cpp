@@ -20,37 +20,55 @@ void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
+	Owner = GetOwner();
 }
 
-void UOpenDoor::OpenDoor() 
+/*void UOpenDoor::OpenDoor() 
 {
-	AActor* Owner = GetOwner();
-	FRotator NewRotation = FRotator(0.0f, OpenAngle, 0.f);
-	Owner->SetActorRotation(NewRotation);
+	OnOpenRequest.Broadcast();
+	//Owner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.f));
 }
 
 void UOpenDoor::CloseDoor()
 {
-	AActor* Owner = GetOwner();
-	FRotator NewRotation = FRotator(0.0f, 180.0f, 0.f);
-	Owner->SetActorRotation(NewRotation);
-}
+	OncloseRequest.Broadcast();
+	//Owner->SetActorRotation(FRotator(0.0f, 0.0f, 0.f));
+}*/
 
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (PressurePlate->IsOverlappingActor(ActorThatOpens)) {
-		OpenDoor();
-		LastDoorOpenTime = GetWorld()->GetTimeSeconds();
+	if (GetTotalMassOfActionsOnPlate() > TriggerMass /*PressurePlate->IsOverlappingActor(Owner)*/) {
+		OnOpen.Broadcast();
+		//LastDoorOpenTime = GetWorld()->GetTimeSeconds();
+	}
+	else {
+		OnClose.Broadcast();
 	}
 	
 	// check if it's time to close the door.
-	if (GetWorld()->GetTimeSeconds() - LastDoorOpenTime > DoorCloseDelay)
+	/*if (GetWorld()->GetTimeSeconds() - LastDoorOpenTime > DoorCloseDelay)
 	{
 		CloseDoor();
-	}
+	}*/
 }
 
+float UOpenDoor::GetTotalMassOfActionsOnPlate() {
+	if (!PressurePlate) return 0;
+	float TotalMass = 0.f;
+
+	// Find all the overlapping actors
+	TArray<AActor*> OverlappingActor;
+	PressurePlate->GetOverlappingActors(OUT OverlappingActor);
+
+	for (const auto& Actor : OverlappingActor) {
+		//UE_LOG(LogTemp, Warning, TEXT("Actor: %s\n"), *(Actor->GetName()));
+		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+		//actor//->GetComponentByClass<UPrimitive>
+	}
+	// Iterate through them adding their masses
+	UE_LOG(LogTemp, Warning, TEXT("Total mass: %.f\n"), TotalMass);
+	return TotalMass;
+}
